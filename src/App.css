@@ -42,10 +42,38 @@ code {
   font-size: 0.9em;
 }
 
-.timestamp {
+.status {
   margin-top: 1rem;
+  font-size: 0.95rem;
+  color: #aaa;
+}
+
+.metrics {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.metric {
+  background: #16213e;
+  border: 1px solid #0f3460;
+  border-radius: 10px;
+  padding: 1.2rem 1.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.metric-value {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #667eea;
+}
+
+.metric-label {
+  font-size: 0.8rem;
   color: #888;
-  font-size: 0.9rem;
 }
 
 .footer {

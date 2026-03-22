@@ -1,8 +1,6 @@
 import { version } from "react";
 
 export default function App() {
-  const now = new Date().toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" });
-
   return (
     <div className="container">
       <h1>Claude Code on the Web Demo</h1>
@@ -10,10 +8,24 @@ export default function App() {
         <p>
           React <code>v{version}</code> で動作中
         </p>
-        <p className="timestamp">撮影時刻: {now}</p>
+        <p className="status">URL: {window.location.href}</p>
+      </div>
+      <div className="metrics">
+        <div className="metric">
+          <span className="metric-value">97.2%</span>
+          <span className="metric-label">スコア</span>
+        </div>
+        <div className="metric">
+          <span className="metric-value">1,024</span>
+          <span className="metric-label">リクエスト数</span>
+        </div>
+        <div className="metric">
+          <span className="metric-value">15ms</span>
+          <span className="metric-label">レイテンシ</span>
+        </div>
       </div>
       <p className="footer">
-        Vite + React + Playwright でスクリーンショットを自動撮影するデモ
+        Vite + React + Playwright 差分検知デモ
       </p>
     </div>
   );

@@ -7,15 +7,23 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "screenshot": "node scripts/screenshot.ts"
+    "screenshot": "node scripts/screenshot.ts",
+    "typecheck": "tsc --noEmit",
+    "postinstall": "playwright install --with-deps chromium"
   },
   "dependencies": {
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "vite": "^6.0.0",
+    "@types/node": "^25.5.0",
+    "@types/pixelmatch": "^5.2.6",
+    "@types/pngjs": "^6.0.5",
     "@vitejs/plugin-react": "^4.3.0",
-    "playwright": "^1.49.0"
+    "pixelmatch": "^6.0.0",
+    "playwright": "^1.49.0",
+    "pngjs": "^7.0.0",
+    "typescript": "^5.9.3",
+    "vite": "^6.0.0"
   }
 }
