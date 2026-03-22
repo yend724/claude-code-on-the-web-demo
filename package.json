@@ -1,0 +1,10 @@
+{
+  "name": "claude-code-on-the-web-demo",
+  "version": "1.0.0",
+  "description": "Demo project for testing Claude Code on the Web",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "node test.js"
+  }
+}
