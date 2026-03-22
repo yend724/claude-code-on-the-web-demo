@@ -8,7 +8,7 @@ export default function App() {
         <p>
           React <code>v{version}</code> で動作中
         </p>
-        <p className="status">URL: {window.location.href}</p>
+        <p className="status">{__BUILD_ENV__}</p>
       </div>
       <div className="metrics">
         <div className="metric">

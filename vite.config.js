@@ -7,6 +7,9 @@ const base = `/claude-code-on-the-web-demo/${env}/`;
 
 export default defineConfig({
   base,
+  define: {
+    __BUILD_ENV__: JSON.stringify(env.toUpperCase()),
+  },
   plugins: [react()],
   server: {
     host: "127.0.0.1",

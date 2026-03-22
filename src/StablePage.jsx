@@ -8,7 +8,7 @@ export default function StablePage() {
         <p>
           このページは変更されません（差分検知の基準ページ）
         </p>
-        <p className="status">React <code>v{version}</code></p>
+        <p className="status">{__BUILD_ENV__}</p>
       </div>
       <div className="metrics">
         <div className="metric">
