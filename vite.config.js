@@ -2,10 +2,8 @@ import { resolve } from "node:path";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-const baseDir = process.env.BASE_DIR;
-const base = baseDir
-  ? `/claude-code-on-the-web-demo/${baseDir}/`
-  : "/claude-code-on-the-web-demo/";
+const env = process.env.BUILD_ENV || "stg"; // "stg" | "prd"
+const base = `/claude-code-on-the-web-demo/${env}/`;
 
 export default defineConfig({
   base,
@@ -16,6 +14,7 @@ export default defineConfig({
     strictPort: true,
   },
   build: {
+    outDir: `dist/${env}`,
     rollupOptions: {
       input: {
         main: resolve(__dirname, "index.html"),

@@ -16,10 +16,10 @@ jobs:
         with:
           node-version: 22
       - run: npm install
-      - run: BASE_DIR=prd npm run build
+      - run: npm run build:prd
       - uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
+          publish_dir: ./dist/prd
           destination_dir: prd
           keep_files: true
