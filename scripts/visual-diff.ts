@@ -4,9 +4,14 @@ import { chromium } from "playwright";
 import { PNG } from "pngjs";
 import pixelmatch from "pixelmatch";
 
-const PAGES_URL = "https://yend724.github.io/claude-code-on-the-web-demo/";
-const LOCAL_URL = "http://127.0.0.1:5173/claude-code-on-the-web-demo/";
+const BASE_GITHUB = "https://yend724.github.io/claude-code-on-the-web-demo/";
+const BASE_LOCAL = "http://127.0.0.1:5173/claude-code-on-the-web-demo/";
 const VIEWPORT = { width: 1280, height: 720 };
+
+const PAGES = [
+  { name: "main", path: "" },
+  { name: "stable", path: "stable/" },
+];
 
 // Vite dev サーバーを起動
 const vite: ChildProcess = spawn("npx", ["vite"], {
@@ -59,43 +64,63 @@ try {
   const browser = await chromium.launch({ executablePath });
   const page = await browser.newPage({ viewport: VIEWPORT });
 
-  // GitHub Pages 撮影
-  await page.goto(PAGES_URL, { waitUntil: "networkidle" });
-  await page.screenshot({ path: "screenshots/github-pages.png" });
-  console.log("Saved: screenshots/github-pages.png");
+  const results: { name: string; mismatchedPixels: number; diffPercent: string }[] = [];
 
-  // ローカル dev サーバー撮影
-  await page.goto(LOCAL_URL, { waitUntil: "networkidle" });
-  await page.screenshot({ path: "screenshots/local.png" });
-  console.log("Saved: screenshots/local.png");
+  for (const { name, path } of PAGES) {
+    console.log(`--- ${name} ---`);
+
+    // GitHub Pages 撮影
+    await page.goto(`${BASE_GITHUB}${path}`, { waitUntil: "networkidle" });
+    await page.screenshot({ path: `screenshots/${name}-github.png` });
+    console.log(`Saved: screenshots/${name}-github.png`);
+
+    // ローカル dev サーバー撮影
+    await page.goto(`${BASE_LOCAL}${path}`, { waitUntil: "networkidle" });
+    await page.screenshot({ path: `screenshots/${name}-local.png` });
+    console.log(`Saved: screenshots/${name}-local.png`);
+
+    // 差分検知
+    const imgGithub = PNG.sync.read(
+      fs.readFileSync(`screenshots/${name}-github.png`),
+    );
+    const imgLocal = PNG.sync.read(
+      fs.readFileSync(`screenshots/${name}-local.png`),
+    );
+    const diff = new PNG({ width: imgGithub.width, height: imgGithub.height });
+
+    const mismatchedPixels = pixelmatch(
+      imgGithub.data,
+      imgLocal.data,
+      diff.data,
+      imgGithub.width,
+      imgGithub.height,
+      { threshold: 0.1 },
+    );
+
+    fs.writeFileSync(`screenshots/${name}-diff.png`, PNG.sync.write(diff));
+
+    const totalPixels = imgGithub.width * imgGithub.height;
+    const diffPercent = ((mismatchedPixels / totalPixels) * 100).toFixed(2);
+
+    console.log(`Saved: screenshots/${name}-diff.png`);
+    console.log(
+      `Diff: ${mismatchedPixels.toLocaleString()} pixels (${diffPercent}%)\n`,
+    );
+
+    results.push({ name, mismatchedPixels, diffPercent });
+  }
 
   await browser.close();
 
-  // 差分検知
-  const imgPages = PNG.sync.read(
-    fs.readFileSync("screenshots/github-pages.png"),
-  );
-  const imgLocal = PNG.sync.read(fs.readFileSync("screenshots/local.png"));
-  const diff = new PNG({ width: imgPages.width, height: imgPages.height });
+  // レポート出力
+  console.log("=== Visual Diff Report ===");
+  for (const { name, mismatchedPixels, diffPercent } of results) {
+    const status = mismatchedPixels === 0 ? "PASS (no diff)" : "DIFF DETECTED";
+    console.log(`  ${name}: ${status} — ${mismatchedPixels.toLocaleString()} px (${diffPercent}%)`);
+  }
 
-  const mismatchedPixels = pixelmatch(
-    imgPages.data,
-    imgLocal.data,
-    diff.data,
-    imgPages.width,
-    imgPages.height,
-    { threshold: 0.1 },
-  );
-
-  fs.writeFileSync("screenshots/diff.png", PNG.sync.write(diff));
-
-  const totalPixels = imgPages.width * imgPages.height;
-  const diffPercent = ((mismatchedPixels / totalPixels) * 100).toFixed(2);
-
-  console.log(`\nSaved: screenshots/diff.png`);
-  console.log(
-    `Diff: ${mismatchedPixels.toLocaleString()} pixels (${diffPercent}%)`,
-  );
+  const hasAnyDiff = results.some((r) => r.mismatchedPixels > 0);
+  console.log(`\nResult: ${hasAnyDiff ? "Differences found" : "All pages match"}`);
 } finally {
   vite.kill();
 }
