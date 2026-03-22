@@ -1,11 +1,10 @@
-import { spawn, type ChildProcess } from "node:child_process";
 import fs from "node:fs";
 import { chromium } from "playwright";
 import { PNG } from "pngjs";
 import pixelmatch from "pixelmatch";
 
-const BASE_GITHUB = "https://yend724.github.io/claude-code-on-the-web-demo/";
-const BASE_LOCAL = "http://127.0.0.1:5173/claude-code-on-the-web-demo/";
+const BASE_STG = "https://yend724.github.io/claude-code-on-the-web-demo/stg/";
+const BASE_PRD = "https://yend724.github.io/claude-code-on-the-web-demo/prd/";
 const VIEWPORT = { width: 1280, height: 720 };
 
 const PAGES = [
@@ -13,132 +12,79 @@ const PAGES = [
   { name: "stable", path: "stable/" },
 ];
 
-// Vite dev サーバーを起動
-const vite: ChildProcess = spawn("npx", ["vite"], {
-  cwd: process.cwd(),
-  stdio: ["ignore", "pipe", "pipe"],
-});
+const executablePath = process.env.PLAYWRIGHT_CHROMIUM_PATH || undefined;
+if (executablePath) {
+  console.log(`Using custom Chromium: ${executablePath}`);
+}
 
-// サーバー起動完了を待つ
-await new Promise<void>((resolve, reject) => {
-  const timeout = setTimeout(
-    () => reject(new Error("Vite startup timeout")),
-    30000,
+const browser = await chromium.launch({ executablePath });
+const page = await browser.newPage({ viewport: VIEWPORT });
+
+const results: { name: string; mismatchedPixels: number; diffPercent: string }[] = [];
+
+for (const { name, path } of PAGES) {
+  console.log(`--- ${name} ---`);
+
+  // STG 撮影
+  await page.goto(`${BASE_STG}${path}`, { waitUntil: "networkidle" });
+  await page.screenshot({ path: `screenshots/${name}-stg.png` });
+  console.log(`Saved: screenshots/${name}-stg.png`);
+
+  // PRD 撮影
+  await page.goto(`${BASE_PRD}${path}`, { waitUntil: "networkidle" });
+  await page.screenshot({ path: `screenshots/${name}-prd.png` });
+  console.log(`Saved: screenshots/${name}-prd.png`);
+
+  // 差分検知
+  const imgStg = PNG.sync.read(fs.readFileSync(`screenshots/${name}-stg.png`));
+  const imgPrd = PNG.sync.read(fs.readFileSync(`screenshots/${name}-prd.png`));
+  const diff = new PNG({ width: imgStg.width, height: imgStg.height });
+
+  const mismatchedPixels = pixelmatch(
+    imgStg.data,
+    imgPrd.data,
+    diff.data,
+    imgStg.width,
+    imgStg.height,
+    { threshold: 0.1 },
   );
 
-  const checkReady = (text: string) => {
-    if (text.includes("Local:")) {
-      clearTimeout(timeout);
-      resolve();
-    }
-  };
+  fs.writeFileSync(`screenshots/${name}-diff.png`, PNG.sync.write(diff));
 
-  vite.stdout!.on("data", (chunk: Buffer) => {
-    const text = chunk.toString();
-    process.stdout.write(text);
-    checkReady(text);
-  });
+  const totalPixels = imgStg.width * imgStg.height;
+  const diffPercent = ((mismatchedPixels / totalPixels) * 100).toFixed(2);
 
-  vite.stderr!.on("data", (chunk: Buffer) => {
-    const text = chunk.toString();
-    process.stderr.write(text);
-    checkReady(text);
-  });
+  console.log(`Saved: screenshots/${name}-diff.png`);
+  console.log(
+    `Diff: ${mismatchedPixels.toLocaleString()} pixels (${diffPercent}%)\n`,
+  );
 
-  vite.on("error", (err: Error) => {
-    clearTimeout(timeout);
-    reject(err);
-  });
+  results.push({ name, mismatchedPixels, diffPercent });
+}
 
-  vite.on("exit", (code: number | null) => {
-    if (code !== null && code !== 0) {
-      clearTimeout(timeout);
-      reject(new Error(`Vite exited with code ${code}`));
-    }
-  });
-});
+await browser.close();
 
-console.log("\nVite server ready. Taking screenshots...\n");
+// レポート出力
+console.log("=== Visual Diff Report ===");
+for (const { name, mismatchedPixels, diffPercent } of results) {
+  const status = mismatchedPixels === 0 ? "PASS (no diff)" : "DIFF DETECTED";
+  console.log(`  ${name}: ${status} — ${mismatchedPixels.toLocaleString()} px (${diffPercent}%)`);
+}
 
-try {
-  // PLAYWRIGHT_CHROMIUM_PATH があればプリインストール済み Chromium を使用
-  // （Claude Code on the Web 環境ではダウンロードがブロックされるため）
-  const executablePath = process.env.PLAYWRIGHT_CHROMIUM_PATH || undefined;
-  if (executablePath) {
-    console.log(`Using custom Chromium: ${executablePath}`);
-  }
-  const browser = await chromium.launch({ executablePath });
-  const page = await browser.newPage({ viewport: VIEWPORT });
+const hasAnyDiff = results.some((r) => r.mismatchedPixels > 0);
+console.log(`\nResult: ${hasAnyDiff ? "Differences found" : "All pages match"}`);
 
-  const results: { name: string; mismatchedPixels: number; diffPercent: string }[] = [];
+// HTML レポート生成
+const timestamp = new Date().toLocaleString("ja-JP");
+const passCount = results.filter((r) => r.mismatchedPixels === 0).length;
+const diffCount = results.length - passCount;
 
-  for (const { name, path } of PAGES) {
-    console.log(`--- ${name} ---`);
-
-    // GitHub Pages 撮影
-    await page.goto(`${BASE_GITHUB}${path}`, { waitUntil: "networkidle" });
-    await page.screenshot({ path: `screenshots/${name}-github.png` });
-    console.log(`Saved: screenshots/${name}-github.png`);
-
-    // ローカル dev サーバー撮影
-    await page.goto(`${BASE_LOCAL}${path}`, { waitUntil: "networkidle" });
-    await page.screenshot({ path: `screenshots/${name}-local.png` });
-    console.log(`Saved: screenshots/${name}-local.png`);
-
-    // 差分検知
-    const imgGithub = PNG.sync.read(
-      fs.readFileSync(`screenshots/${name}-github.png`),
-    );
-    const imgLocal = PNG.sync.read(
-      fs.readFileSync(`screenshots/${name}-local.png`),
-    );
-    const diff = new PNG({ width: imgGithub.width, height: imgGithub.height });
-
-    const mismatchedPixels = pixelmatch(
-      imgGithub.data,
-      imgLocal.data,
-      diff.data,
-      imgGithub.width,
-      imgGithub.height,
-      { threshold: 0.1 },
-    );
-
-    fs.writeFileSync(`screenshots/${name}-diff.png`, PNG.sync.write(diff));
-
-    const totalPixels = imgGithub.width * imgGithub.height;
-    const diffPercent = ((mismatchedPixels / totalPixels) * 100).toFixed(2);
-
-    console.log(`Saved: screenshots/${name}-diff.png`);
-    console.log(
-      `Diff: ${mismatchedPixels.toLocaleString()} pixels (${diffPercent}%)\n`,
-    );
-
-    results.push({ name, mismatchedPixels, diffPercent });
-  }
-
-  await browser.close();
-
-  // レポート出力
-  console.log("=== Visual Diff Report ===");
-  for (const { name, mismatchedPixels, diffPercent } of results) {
-    const status = mismatchedPixels === 0 ? "PASS (no diff)" : "DIFF DETECTED";
-    console.log(`  ${name}: ${status} — ${mismatchedPixels.toLocaleString()} px (${diffPercent}%)`);
-  }
-
-  const hasAnyDiff = results.some((r) => r.mismatchedPixels > 0);
-  console.log(`\nResult: ${hasAnyDiff ? "Differences found" : "All pages match"}`);
-
-  // HTML レポート生成
-  const timestamp = new Date().toLocaleString("ja-JP");
-  const passCount = results.filter((r) => r.mismatchedPixels === 0).length;
-  const diffCount = results.length - passCount;
-
-  const tableRows = results
-    .map(({ name, mismatchedPixels, diffPercent }) => {
-      const isDiff = mismatchedPixels > 0;
-      const statusClass = isDiff ? "diff" : "pass";
-      const statusLabel = isDiff ? "DIFF" : "PASS";
-      return `        <tr data-status="${statusClass}">
+const tableRows = results
+  .map(({ name, mismatchedPixels, diffPercent }) => {
+    const isDiff = mismatchedPixels > 0;
+    const statusClass = isDiff ? "diff" : "pass";
+    const statusLabel = isDiff ? "DIFF" : "PASS";
+    return `        <tr data-status="${statusClass}">
           <td>${name}</td>
           <td class="${statusClass}">${statusLabel}</td>
           <td>${mismatchedPixels.toLocaleString()}</td>
@@ -148,16 +94,16 @@ try {
         <tr class="preview-row" data-preview="${name}" hidden>
           <td colspan="5">
             <div class="preview-images">
-              <figure><figcaption>GitHub Pages</figcaption><img loading="lazy" src="${name}-github.png"></figure>
-              <figure><figcaption>Local</figcaption><img loading="lazy" src="${name}-local.png"></figure>
+              <figure><figcaption>STG</figcaption><img loading="lazy" src="${name}-stg.png"></figure>
+              <figure><figcaption>PRD</figcaption><img loading="lazy" src="${name}-prd.png"></figure>
               <figure><figcaption>Diff</figcaption><img loading="lazy" src="${name}-diff.png"></figure>
             </div>
           </td>
         </tr>`;
-    })
-    .join("\n");
+  })
+  .join("\n");
 
-  const html = `<!DOCTYPE html>
+const html = `<!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -187,7 +133,7 @@ try {
 </style>
 </head>
 <body>
-  <h1>Visual Diff Report</h1>
+  <h1>Visual Diff Report — STG vs PRD</h1>
   <p class="timestamp">${timestamp}</p>
   <div class="summary">
     <span>Total: ${results.length}</span>
@@ -208,7 +154,6 @@ ${tableRows}
     </tbody>
   </table>
   <script>
-    // Toggle preview
     document.querySelectorAll(".toggle-btn").forEach(btn => {
       btn.addEventListener("click", () => {
         const row = document.querySelector(\`[data-preview="\${btn.dataset.page}"]\`);
@@ -217,7 +162,6 @@ ${tableRows}
         btn.textContent = hidden ? "Hide" : "Show";
       });
     });
-    // Filter
     document.querySelectorAll(".filters button").forEach(btn => {
       btn.addEventListener("click", () => {
         document.querySelectorAll(".filters button").forEach(b => b.classList.remove("active"));
@@ -235,8 +179,5 @@ ${tableRows}
 </body>
 </html>`;
 
-  fs.writeFileSync("screenshots/report.html", html);
-  console.log("Saved: screenshots/report.html");
-} finally {
-  vite.kill();
-}
+fs.writeFileSync("screenshots/report.html", html);
+console.log("Saved: screenshots/report.html");
