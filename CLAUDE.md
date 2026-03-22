@@ -1,13 +1,21 @@
 # Claude Code on the Web Demo
 
 ## プロジェクト概要
-Node.js のデモプロジェクト。Claude Code on the Web の動作確認用。
+Vite + React + Playwright のデモプロジェクト。Claude Code on the Web の動作確認用。
 
 ## コマンド
-- `npm start` - メインスクリプト実行
-- `npm test` - テスト実行
+- `npm run dev` - Vite dev サーバー起動
+- `npm run build` - プロダクションビルド
+- `npm run screenshot` - Playwright でスクリーンショット撮影
+
+## セットアップ（Claude Code on the Web）
+Setup script に以下を設定:
+```bash
+#!/bin/bash
+npm install
+npx playwright install --with-deps chromium
+```
 
 ## ルール
-- Node.js 標準ライブラリのみ使用（外部依存なし）
-- テストは `test.js` に記述
 - 日本語コメント可
+- スクリーンショットは `screenshots/` に出力（PNG は gitignore）

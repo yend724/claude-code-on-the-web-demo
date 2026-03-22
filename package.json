@@ -1,10 +1,21 @@
 {
   "name": "claude-code-on-the-web-demo",
   "version": "1.0.0",
-  "description": "Demo project for testing Claude Code on the Web",
-  "main": "index.js",
+  "private": true,
+  "description": "Vite + React + Playwright screenshot demo for Claude Code on the Web",
+  "type": "module",
   "scripts": {
-    "start": "node index.js",
-    "test": "node test.js"
+    "dev": "vite",
+    "build": "vite build",
+    "screenshot": "node scripts/screenshot.ts"
+  },
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "vite": "^6.0.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "playwright": "^1.49.0"
   }
 }
