@@ -8,8 +8,7 @@
     "dev": "vite",
     "build": "vite build",
     "visual-diff": "node scripts/visual-diff.ts",
-    "typecheck": "tsc --noEmit",
-    "postinstall": "playwright install --with-deps chromium"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "react": "^19.0.0",
