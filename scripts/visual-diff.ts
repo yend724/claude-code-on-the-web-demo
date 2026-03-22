@@ -26,17 +26,23 @@ await new Promise<void>((resolve, reject) => {
     30000,
   );
 
-  vite.stdout!.on("data", (chunk: Buffer) => {
-    const text = chunk.toString();
-    process.stdout.write(text);
+  const checkReady = (text: string) => {
     if (text.includes("Local:")) {
       clearTimeout(timeout);
       resolve();
     }
+  };
+
+  vite.stdout!.on("data", (chunk: Buffer) => {
+    const text = chunk.toString();
+    process.stdout.write(text);
+    checkReady(text);
   });
 
   vite.stderr!.on("data", (chunk: Buffer) => {
-    process.stderr.write(chunk);
+    const text = chunk.toString();
+    process.stderr.write(text);
+    checkReady(text);
   });
 
   vite.on("error", (err: Error) => {
