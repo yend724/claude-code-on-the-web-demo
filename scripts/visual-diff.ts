@@ -16,7 +16,10 @@ const vite: ChildProcess = spawn("npx", ["vite"], {
 
 // サーバー起動完了を待つ
 await new Promise<void>((resolve, reject) => {
-  const timeout = setTimeout(() => reject(new Error("Vite startup timeout")), 30000);
+  const timeout = setTimeout(
+    () => reject(new Error("Vite startup timeout")),
+    30000,
+  );
 
   vite.stdout!.on("data", (chunk: Buffer) => {
     const text = chunk.toString();
@@ -69,7 +72,9 @@ try {
   await browser.close();
 
   // 差分検知
-  const imgPages = PNG.sync.read(fs.readFileSync("screenshots/github-pages.png"));
+  const imgPages = PNG.sync.read(
+    fs.readFileSync("screenshots/github-pages.png"),
+  );
   const imgLocal = PNG.sync.read(fs.readFileSync("screenshots/local.png"));
   const diff = new PNG({ width: imgPages.width, height: imgPages.height });
 
@@ -88,7 +93,9 @@ try {
   const diffPercent = ((mismatchedPixels / totalPixels) * 100).toFixed(2);
 
   console.log(`\nSaved: screenshots/diff.png`);
-  console.log(`Diff: ${mismatchedPixels.toLocaleString()} pixels (${diffPercent}%)`);
+  console.log(
+    `Diff: ${mismatchedPixels.toLocaleString()} pixels (${diffPercent}%)`,
+  );
 } finally {
   vite.kill();
 }
