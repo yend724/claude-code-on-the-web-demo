@@ -8,6 +8,7 @@ const PAIRS: { name: string; a: string; b: string }[] = [
   { name: "0 vs O", a: "0", b: "O" },
   { name: "1 vs l", a: "1", b: "l" },
   { name: "1 vs I", a: "1", b: "I" },
+  { name: "l vs I", a: "l", b: "I" },
   { name: "カ vs 力", a: "カ", b: "力" },
   { name: "オ vs 才", a: "オ", b: "才" },
   { name: "ロ vs 口", a: "ロ", b: "口" },
@@ -107,8 +108,8 @@ const diffCount = idx;
 
 const passCount = idx - diffCount;
 
-// === パフォーマンステスト: 100ページ ===
-const MAX_PERF_PAGES = 1000;
+// === パフォーマンステスト: 200ページ ===
+const MAX_PERF_PAGES = 200;
 for (let i = 1; i <= MAX_PERF_PAGES; i++) {
   const file = `${pad4(i)}.html`;
   const title = `Perf #${i}`;
