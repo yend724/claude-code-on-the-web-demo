@@ -50,7 +50,7 @@ for (const file of files) {
 
 await browser.close();
 
-console.log(`\n  ${files.length} pages | SS: ${(totalScreenshotMs / 1000).toFixed(1)}s`);
+console.log(`\n  ${files.length} pages | Screenshot: ${(totalScreenshotMs / 1000).toFixed(1)}s`);
 
 // タイミング情報を JSON で書き出し（benchmark.ts が読む）
 fs.writeFileSync(

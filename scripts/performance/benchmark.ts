@@ -88,7 +88,7 @@ for (const stgFile of stgFiles) {
 
 const diffFound = pageResults.filter((r) => r.detected).length;
 console.log(
-  `  ${pageResults.length} pages | SS: ${(totalScreenshotMs / 1000).toFixed(1)}s | Cmp: ${(totalCompareMs / 1000).toFixed(1)}s | ${Math.round((totalScreenshotMs + totalCompareMs) / pageResults.length)}ms/page | Diff: ${diffFound}`,
+  `  ${pageResults.length} pages | Screenshot: ${(totalScreenshotMs / 1000).toFixed(1)}s | Compare: ${(totalCompareMs / 1000).toFixed(1)}s | Total: ${((totalScreenshotMs + totalCompareMs) / 1000).toFixed(1)}s | ${Math.round((totalScreenshotMs + totalCompareMs) / pageResults.length)}ms/page | Diff: ${diffFound}`,
 );
 
 // HTML レポート生成
@@ -100,7 +100,7 @@ function fmtSec(ms: number): string {
   return (ms / 1000).toFixed(1) + "s";
 }
 
-const summaryLine = `${totalCount} pages | SS: ${fmtSec(totalScreenshotMs)} | Cmp: ${fmtSec(totalCompareMs)} | ${Math.round((totalScreenshotMs + totalCompareMs) / totalCount)}ms/page | Diff: ${diffCount}`;
+const summaryLine = `${totalCount} pages | Screenshot: ${fmtSec(totalScreenshotMs)} | Compare: ${fmtSec(totalCompareMs)} | Total: ${fmtSec(totalScreenshotMs + totalCompareMs)} | ${Math.round((totalScreenshotMs + totalCompareMs) / totalCount)}ms/page | Diff: ${diffCount}`;
 
 const tableRows = pageResults
   .map(
