@@ -5,22 +5,22 @@
   "description": "Vite + React + Playwright screenshot demo for Claude Code on the Web",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "build:stg": "BUILD_ENV=stg vite build",
-    "build:prd": "BUILD_ENV=prd vite build",
-    "visual-diff": "node scripts/visual-diff.ts",
+    "dev": "node scripts/generate-pages.ts && vite build --config vite.config.benchmark.js && vite preview --config vite.config.benchmark.js",
+    "build": "vite build --config vite.config.benchmark.js",
+    "generate-pages": "node scripts/generate-pages.ts",
+    "benchmark:accuracy:screenshot": "node scripts/accuracy/screenshot.ts",
+    "benchmark:accuracy:benchmark": "node scripts/accuracy/benchmark.ts",
+    "benchmark:accuracy": "node scripts/accuracy/screenshot.ts && node scripts/accuracy/benchmark.ts",
+    "benchmark:performance:screenshot": "node scripts/performance/screenshot.ts",
+    "benchmark:performance:benchmark": "node scripts/performance/benchmark.ts",
+    "benchmark:performance": "node scripts/performance/screenshot.ts && node scripts/performance/benchmark.ts",
+    "benchmark": "node scripts/accuracy/screenshot.ts && node scripts/accuracy/benchmark.ts && node scripts/performance/screenshot.ts && node scripts/performance/benchmark.ts",
     "typecheck": "tsc --noEmit"
-  },
-  "dependencies": {
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@types/node": "^25.5.0",
     "@types/pixelmatch": "^5.2.6",
     "@types/pngjs": "^6.0.5",
-    "@vitejs/plugin-react": "^4.3.0",
     "pixelmatch": "^6.0.0",
     "playwright": "^1.49.0",
     "pngjs": "^7.0.0",

@@ -1,4 +1,4 @@
 node_modules/
 dist/
-screenshots/*.png
-screenshots/*.html
+__local__/
+report/
