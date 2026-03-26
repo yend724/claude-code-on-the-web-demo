@@ -8,7 +8,9 @@ const PRD_DIR = path.join(PAGES_DIR, "performance/prd");
 const REPORT_DIR = "report";
 const VIEWPORT = { width: 1280, height: 720 };
 
-// ディレクトリスキャン
+const BASE_URL = "https://yend724.github.io/claude-code-on-the-web-demo";
+
+// ディレクトリスキャン（ファイル一覧の取得はローカルから）
 if (!fs.existsSync(STG_DIR)) {
   console.error("dist/benchmark/performance/stg not found. Run `npm run generate-pages && npm run build` first.");
   process.exit(1);
@@ -23,6 +25,7 @@ const browser = await chromium.launch({ executablePath });
 const page = await browser.newPage({ viewport: VIEWPORT });
 
 console.log("\n=== Performance Screenshot ===\n");
+console.log(`  Base URL: ${BASE_URL}\n`);
 
 const perfImgDir = path.join(REPORT_DIR, "performance");
 fs.mkdirSync(perfImgDir, { recursive: true });
@@ -35,11 +38,15 @@ for (let i = 0; i < files.length; i++) {
   const prdPath = path.resolve(PRD_DIR, file);
   const baseName = file.replace(".html", "");
 
+  // URL 構築
+  const stgUrl = `${BASE_URL}/benchmark/performance/stg/${file}`;
+  const prdUrl = `${BASE_URL}/benchmark/performance/prd/${file}`;
+
   // スクリーンショット撮影
   const ssStart = performance.now();
-  await page.goto(`file://${stgPath}`);
+  await page.goto(stgUrl, { waitUntil: "networkidle" });
   const stgBuf = await page.screenshot();
-  await page.goto(`file://${prdPath}`);
+  await page.goto(prdUrl, { waitUntil: "networkidle" });
   const prdBuf = await page.screenshot();
   const elapsedMs = performance.now() - ssStart;
   totalScreenshotMs += elapsedMs;
