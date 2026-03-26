@@ -45,7 +45,8 @@ const pageResults: PageResult[] = [];
 
 let totalCompareMs = 0;
 
-for (const stgFile of stgFiles) {
+for (let i = 0; i < stgFiles.length; i++) {
+  const stgFile = stgFiles[i];
   const baseName = stgFile.replace("-stg.png", "");
   const prdFile = `${baseName}-prd.png`;
 
@@ -65,7 +66,8 @@ for (const stgFile of stgFiles) {
     imgStg.height,
     { threshold: 0 },
   );
-  totalCompareMs += performance.now() - cmpStart;
+  const elapsedMs = performance.now() - cmpStart;
+  totalCompareMs += elapsedMs;
 
   // diff 画像保存
   const diffPngBuf = PNG.sync.write(diff);
@@ -84,6 +86,11 @@ for (const stgFile of stgFiles) {
     imgPrd: `${baseName}-prd.png`,
     imgDiff: `${baseName}-diff.png`,
   });
+
+  // 進捗表示
+  const pct = Math.round(((i + 1) / stgFiles.length) * 100);
+  process.stdout.write(`\r  [${i + 1}/${stgFiles.length}] ${baseName} (${(elapsedMs / 1000).toFixed(1)}s) ... ${pct}%`);
+  if (i === stgFiles.length - 1) process.stdout.write("\n");
 }
 
 const diffFound = pageResults.filter((r) => r.detected).length;

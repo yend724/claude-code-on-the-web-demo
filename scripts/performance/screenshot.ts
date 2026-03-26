@@ -29,7 +29,8 @@ fs.mkdirSync(perfImgDir, { recursive: true });
 
 let totalScreenshotMs = 0;
 
-for (const file of files) {
+for (let i = 0; i < files.length; i++) {
+  const file = files[i];
   const stgPath = path.resolve(STG_DIR, file);
   const prdPath = path.resolve(PRD_DIR, file);
   const baseName = file.replace(".html", "");
@@ -40,7 +41,13 @@ for (const file of files) {
   const stgBuf = await page.screenshot();
   await page.goto(`file://${prdPath}`);
   const prdBuf = await page.screenshot();
-  totalScreenshotMs += performance.now() - ssStart;
+  const elapsedMs = performance.now() - ssStart;
+  totalScreenshotMs += elapsedMs;
+
+  // 進捗表示
+  const pct = Math.round(((i + 1) / files.length) * 100);
+  process.stdout.write(`\r  [${i + 1}/${files.length}] ${baseName} (${(elapsedMs / 1000).toFixed(1)}s) ... ${pct}%`);
+  if (i === files.length - 1) process.stdout.write("\n");
 
   // 画像保存
   fs.writeFileSync(path.join(perfImgDir, `${baseName}-stg.png`), stgBuf);
