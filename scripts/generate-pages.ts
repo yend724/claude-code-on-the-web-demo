@@ -108,7 +108,7 @@ const diffCount = idx;
 const passCount = idx - diffCount;
 
 // === パフォーマンステスト: 100ページ ===
-const MAX_PERF_PAGES = 100;
+const MAX_PERF_PAGES = 1000;
 for (let i = 1; i <= MAX_PERF_PAGES; i++) {
   const file = `${pad4(i)}.html`;
   const title = `Perf #${i}`;

@@ -31,6 +31,14 @@ if (stgFiles.length === 0) {
   process.exit(1);
 }
 
+// screenshot.ts が書き出したタイミング情報を読み込み
+const timingPath = path.join(perfImgDir, "timing.json");
+let totalScreenshotMs = 0;
+if (fs.existsSync(timingPath)) {
+  const timing = JSON.parse(fs.readFileSync(timingPath, "utf-8"));
+  totalScreenshotMs = timing.totalScreenshotMs ?? 0;
+}
+
 console.log("\n=== Performance Benchmark ===\n");
 
 const pageResults: PageResult[] = [];
@@ -80,7 +88,7 @@ for (const stgFile of stgFiles) {
 
 const diffFound = pageResults.filter((r) => r.detected).length;
 console.log(
-  `  ${pageResults.length} pages | Cmp: ${(totalCompareMs / 1000).toFixed(1)}s | ${Math.round(totalCompareMs / pageResults.length)}ms/page | Diff: ${diffFound}`,
+  `  ${pageResults.length} pages | SS: ${(totalScreenshotMs / 1000).toFixed(1)}s | Cmp: ${(totalCompareMs / 1000).toFixed(1)}s | ${Math.round((totalScreenshotMs + totalCompareMs) / pageResults.length)}ms/page | Diff: ${diffFound}`,
 );
 
 // HTML レポート生成
@@ -92,7 +100,7 @@ function fmtSec(ms: number): string {
   return (ms / 1000).toFixed(1) + "s";
 }
 
-const summaryLine = `${totalCount} pages | Cmp: ${fmtSec(totalCompareMs)} | ${Math.round(totalCompareMs / totalCount)}ms/page | Diff: ${diffCount}`;
+const summaryLine = `${totalCount} pages | SS: ${fmtSec(totalScreenshotMs)} | Cmp: ${fmtSec(totalCompareMs)} | ${Math.round((totalScreenshotMs + totalCompareMs) / totalCount)}ms/page | Diff: ${diffCount}`;
 
 const tableRows = pageResults
   .map(

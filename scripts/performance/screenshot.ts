@@ -29,9 +29,7 @@ fs.mkdirSync(perfImgDir, { recursive: true });
 
 let totalScreenshotMs = 0;
 
-const entries = files.slice(0, 100);
-
-for (const file of entries) {
+for (const file of files) {
   const stgPath = path.resolve(STG_DIR, file);
   const prdPath = path.resolve(PRD_DIR, file);
   const baseName = file.replace(".html", "");
@@ -48,10 +46,16 @@ for (const file of entries) {
   fs.writeFileSync(path.join(perfImgDir, `${baseName}-stg.png`), stgBuf);
   fs.writeFileSync(path.join(perfImgDir, `${baseName}-prd.png`), prdBuf);
 
-  console.log(`  ${baseName}`);
 }
 
 await browser.close();
 
-console.log(`\n  ${entries.length} pages | SS: ${(totalScreenshotMs / 1000).toFixed(1)}s`);
-console.log(`\nSaved: ${perfImgDir}/ (${entries.length * 2} images)`);
+console.log(`\n  ${files.length} pages | SS: ${(totalScreenshotMs / 1000).toFixed(1)}s`);
+
+// タイミング情報を JSON で書き出し（benchmark.ts が読む）
+fs.writeFileSync(
+  path.join(perfImgDir, "timing.json"),
+  JSON.stringify({ totalScreenshotMs, pageCount: files.length }),
+);
+
+console.log(`\nSaved: ${perfImgDir}/ (${files.length * 2} images)`);
